@@ -12,7 +12,8 @@ const checkHttpUserAuthentication = (request, response, next) => {
             const isValidToken = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
             if (isValidToken) {
                 return response.status(200).json({
-                    message: "ok"
+                    message: "ok",
+                    user: isValidToken
                 });
             }
             return response.status(401).json({

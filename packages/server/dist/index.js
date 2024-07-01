@@ -38,7 +38,7 @@ dotenv_1.default.config();
 const app = (0, express_1.default)();
 exports.server = http_1.default.createServer(app);
 const corsOptions = {
-    origin: ["http://localhost:3000", "http://192.168.0.16"],
+    origin: ["http://localhost:3000", "http://192.168.200.154:3000"],
     methods: '*',
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true

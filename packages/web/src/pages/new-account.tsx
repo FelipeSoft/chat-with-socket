@@ -45,7 +45,7 @@ const NewAccount = () => {
 
     async function onSubmit(values: z.infer<typeof FormSchema>) {
         try {
-            const { status } = await axios.post("http://localhost:3001/user/new-account", {
+            const { status } = await axios.post("http://192.168.200.154:3001/user/new-account", {
                 username: values.username,
                 password: values.password
             }, { withCredentials: true });

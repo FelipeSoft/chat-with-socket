@@ -12,9 +12,9 @@ const app = express();
 export const server = http.createServer(app);
 
 const corsOptions: CorsOptions = {
-    origin: ["http://localhost:3000", "http://192.168.0.16"],
+    origin: "*",
     methods: '*', 
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization'],  
     credentials: true
 };
 

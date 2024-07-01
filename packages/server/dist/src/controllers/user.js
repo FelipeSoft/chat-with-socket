@@ -4,17 +4,17 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.create = exports.start = exports.ping = void 0;
+const express_1 = require("express");
 const user_1 = __importDefault(require("../models/user"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-const ping = async (req, response) => {
+const ping = async (req, res) => {
     try {
-        const user = jsonwebtoken_1.default.verify(req.cookies.token, process.env.JWT_SECRET);
-        return response.status(200).json({ pong: "test" });
+        return express_1.response.status(200);
     }
     catch (error) {
-        return response.status(400).json({
-            message: "Bad Request"
+        return express_1.response.status(500).json({
+            message: "Internal Server Error;"
         });
     }
 };
@@ -57,17 +57,14 @@ const create = async (req, res) => {
     try {
         let { username, password } = req.body;
         password = await bcrypt_1.default.hash(password, 10);
-        const user = new user_1.default();
-        const existsUser = await user.collection.findOne({ username: username });
+        const existsUser = await user_1.default.collection.findOne({ username: username });
         if (existsUser) {
             return res.status(409).json({
                 message: "The username is already in use."
             });
         }
-        user.username = username;
-        user.password = password;
-        await user.save();
-        return res.status(200).json({
+        await user_1.default.collection.insertOne({ username, password });
+        return res.status(201).json({
             message: "Now you are registered!"
         });
     }

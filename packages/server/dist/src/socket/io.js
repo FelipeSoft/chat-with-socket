@@ -2,27 +2,17 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const socket_io_1 = require("socket.io");
 const formatTime_1 = require("../utils/formatTime");
-const socket_auth_1 = require("../middlewares/socket.auth");
 const index_1 = require("../../index");
 let connectedUsers = [];
 let messages = [];
 const io = new socket_io_1.Server(index_1.server, {
     cors: {
-        origin: ["http://localhost:3000", "http://192.168.0.16"]
+        origin: ["http://localhost:3000", "http://192.168.200.154:3000"]
     }
-});
-io.use((socket, next) => {
-    (0, socket_auth_1.checkSocketUserAuthentication)(socket, (err) => {
-        if (err) {
-            return next(err);
-        }
-        next();
-    });
 });
 io.on("connection", (socket) => {
     socket.on("join-request", (username) => {
         socket.username = username;
-        console.log(username);
         connectedUsers.push({ username });
         messages.push({
             status: "joined",
@@ -34,8 +24,13 @@ io.on("connection", (socket) => {
             messages: messages
         });
     });
+    socket.on("log-update", () => {
+        io.emit("log-update", {
+            connectedUsers: connectedUsers.map(user => user.username),
+            messages: messages
+        });
+    });
     socket.on("message", (message) => {
-        console.log(message);
         messages.push({
             message: message,
             user: socket.username,
