@@ -8,6 +8,10 @@ import { z } from "zod"
 import Image from "next/image";
 import { useRouter } from "next/router";
 import Link from "next/link";
+import axios, { AxiosError } from "axios";
+import { useToast } from "@/components/ui/use-toast";
+import { useContext } from "react";
+import { AuthenticationContext } from "@/context/authentication-context";
 
 const FormSchema = z.object({
     username: z.string().min(2, {
@@ -24,6 +28,8 @@ const FormSchema = z.object({
 
 const SessionStart = () => {
     const router = useRouter();
+    const { toast } = useToast();
+    const authenticationContext = useContext(AuthenticationContext);
 
     const form = useForm<z.infer<typeof FormSchema>>({
         resolver: zodResolver(FormSchema),
@@ -32,9 +38,40 @@ const SessionStart = () => {
         },
     })
 
-    function onSubmit(values: z.infer<typeof FormSchema>) {
-        localStorage.setItem("CURRENT_USER", values.username);
-        router.push("/chat");
+    async function onSubmit(values: z.infer<typeof FormSchema>) {
+        try {
+            const { data, status } = await axios.post("http://localhost:3001/user/session-start", {
+                username: values.username,
+                password: values.password
+            }, { withCredentials: true });
+
+            if (status !== 200) {
+                toast({
+                    variant: "destructive",
+                    title: "Authentication Failed",
+                    description: data.message
+                });
+                return;
+            }
+
+            authenticationContext?.setUser(values.username);
+            router.push("/");
+            return;
+        } catch (error) {
+            if (error instanceof AxiosError) {
+                toast({
+                    variant: "destructive",
+                    title: "Authentication Failed",
+                    description: error.response?.data.message
+                });
+                return;
+            }
+            toast({
+                variant: "destructive",
+                title: "Authentication Failed",
+                description: "Internal Server Error"
+            });
+        }
     }
 
     return (
@@ -78,7 +115,7 @@ const SessionStart = () => {
                         )}
                     />
                     <Button type="submit" className="w-full mt-6 bg-cyan-700 hover:bg-cyan-700/80">Log in</Button>
-                    <Link href="/new-account" className="text-cyan-700 text-center mt-6 mb-16">Don't have an account yet?</Link>
+                    <Link href="/new-account" className="text-cyan-700 text-center mt-6 mb-16">Do not have an account yet?</Link>
                 </form>
             </Form>
         </main>

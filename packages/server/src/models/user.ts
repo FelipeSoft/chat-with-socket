@@ -15,16 +15,20 @@ const UserSchema = new Schema(
             type: String,
             trim: true,
             unique: true,
-            required: true,
+            required: true
         },
         password: {
             type: String,
             required: true,
         },
+        createdAt: {},
+        updatedAt: {}
     },
     {
         timestamps: true
     }
 )
 
-export default mongoose.model<UserDocument, UserModel>('User', UserSchema);
+const User = mongoose.model<UserDocument, UserModel>('User', UserSchema);
+
+export default User;

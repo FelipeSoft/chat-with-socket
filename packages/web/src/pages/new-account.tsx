@@ -8,6 +8,8 @@ import { z } from "zod"
 import Image from "next/image";
 import { useRouter } from "next/router";
 import Link from "next/link";
+import axios, { AxiosError } from "axios";
+import { toast } from "@/components/ui/use-toast";
 
 const FormSchema = z.object({
     username: z.string().min(2, {
@@ -41,9 +43,38 @@ const NewAccount = () => {
         },
     })
 
-    function onSubmit(values: z.infer<typeof FormSchema>) {
-        localStorage.setItem("CURRENT_USER", values.username);
-        router.push("/chat");
+    async function onSubmit(values: z.infer<typeof FormSchema>) {
+        try {
+            const { status } = await axios.post("http://localhost:3001/user/new-account", {
+                username: values.username,
+                password: values.password
+            }, { withCredentials: true });
+
+            if (status !== 201) {
+                toast({
+                    variant: "destructive",
+                    title: "Register Failed",
+                    description: "Please, try again later."
+                });
+                return;
+            }
+
+            router.push("/session-start");
+        } catch (error) {
+            if (error instanceof AxiosError) {
+                toast({
+                    variant: "destructive",
+                    title: "Register Failed",
+                    description: error.response?.data.message
+                });
+                return;
+            }
+            toast({
+                variant: "destructive",
+                title: "Register Failed",
+                description: "Please, try again later."
+            });
+        }
     }
 
     return (

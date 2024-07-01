@@ -1,7 +1,17 @@
-import { Request, Response } from "express";
+import { Request, Response, response } from "express";
 import User from "../models/user";
-import bcrypt from "bcrypt";
+import bcrypt, { compareSync } from "bcrypt";
 import jwt from "jsonwebtoken";
+
+export const ping = async (req: Request, res: Response) => {
+    try {
+        return response.status(200);
+    } catch (error) {
+        return response.status(500).json({
+            message: "Internal Server Error;"
+        });
+    }
+}
 
 export const start = async (req: Request, res: Response) => {
     try {
@@ -9,12 +19,18 @@ export const start = async (req: Request, res: Response) => {
 
         const user = new User();
         const existsUser = await user.collection.findOne({ username: username });
-
         if (existsUser) {
             const correctPassword = await bcrypt.compare(password, existsUser.password);
             if (correctPassword) {
                 const token = jwt.sign({ username }, process.env.JWT_SECRET as string, { expiresIn: "1d" });
-                res.cookie("token", token);
+
+                res.cookie("token", token, {
+                    httpOnly: true,
+                    secure: process.env.NODE_ENV === "production",
+                    sameSite: "strict",
+                    maxAge: 24 * 60 * 60 * 1000
+                });
+
                 return res.status(200).json({
                     message: "Connected successfully!"
                 });
@@ -29,7 +45,7 @@ export const start = async (req: Request, res: Response) => {
         });
     } catch (error) {
         return res.status(500).json({
-            error: "Interval Server Error."
+            message: "Internal Server Error."
         });
     }
 }
@@ -39,25 +55,22 @@ export const create = async (req: Request, res: Response) => {
         let { username, password } = req.body;
         password = await bcrypt.hash(password, 10);
 
-        const user = new User();
-        const existsUser = await user.collection.findOne({ username: username });
+        const existsUser = await User.collection.findOne({ username: username });
 
         if (existsUser) {
             return res.status(409).json({
-                message: "The username already in use."
+                message: "The username is already in use."
             });
         }
 
-        user.username = username;
-        user.password = password;
-        user.save();
+        await User.collection.insertOne({ username, password });
 
-        return res.status(200).json({
+        return res.status(201).json({
             message: "Now you are registered!"
         });
     } catch (error) {
         return res.status(500).json({
-            error: "Interval Server Error."
+            message: "Internal Server Error."
         });
     }
 }
